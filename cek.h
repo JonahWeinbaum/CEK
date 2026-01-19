@@ -64,7 +64,7 @@ struct Kont {
   };
 };
 
-Kont* make_mt() {
+Kont* make_mt(void) {
   Kont* kp = malloc(sizeof(Kont));
   kp->type = MT;
   return kp;
