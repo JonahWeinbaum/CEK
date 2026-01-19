@@ -28,8 +28,6 @@ int main(void) {
       s_next = step(s_next);
       print_state(s_next);
       printf("\n");
-      printf("Kont Type: %d\n", s_next->k->type);
-      printf("Is Value: %d\n", is_value(s_next->c->x));
       printf("=====================\n");
       is_stop = (s_next->k->type == MT) && is_value(s_next->c->x);
     }
