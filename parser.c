@@ -56,6 +56,17 @@ AstNode* make_opr(char op, AstNode* lhs, AstNode* rhs) {
   return node;
 }
 
+int is_value(AstNode* node) {
+  switch (node->type) {
+  case NUM:
+  case ABS:
+    return 1;
+
+  default:
+      return 0;
+  }
+}
+
 AstNode* parse(char *in) {
   // Reset global state 
   input = in;
@@ -68,6 +79,8 @@ AstNode* parse(char *in) {
 
 AstNode* parse_V(void) {
   skip_ws();
+
+  AstNode* ret = NULL;
 
   // Abstraction
   if (match('\\')) {
@@ -107,7 +120,7 @@ AstNode* parse_V(void) {
 
     int i = 0;
     for (; isdigit(peek()); i++) {
-      number[i] = next();
+            number[i] = next();
     }
     number[i] = 0; // NULL terminate
     int value = atoi(number);
@@ -139,54 +152,36 @@ AstNode* parse_M(void) {
     }    
   }
 
-  parse_V();
+  return parse_V();
 }
 
-void print_node(AstNode* node, int indent) {
+void print_node(AstNode* node) {
   switch (node->type) {
   case VAR:
-    for (int i = 0; i < indent; i++) { printf(" "); }
-    printf("VAR('%s')\n", node->var.name); 
+    printf("%s", node->var.name); 
     break;
   case NUM:
-    for (int i = 0; i < indent; i++) { printf(" "); }
-    printf("NUM(%d)\n", node->num.value); 
+    printf("%d", node->num.value); 
     break;
   case ABS:
-    for (int i = 0; i < indent; i++) { printf(" "); }
-    printf("ABS(\n");
-    print_node(node->abs.param, indent + 2);
-    for (int i = 0; i < indent + 2; i++) { printf(" "); }
-    printf("BODY(\n");
-    print_node(node->abs.body, indent + 4);
-    for (int i = 0; i < indent + 2; i++) { printf(" "); }
-    printf(")\n"); 
-    for (int i = 0; i < indent; i++) { printf(" "); }
-    printf(")\n"); 
+    printf("\\");
+    print_node(node->abs.param);
+    printf(".");
+    print_node(node->abs.body);
     break;
   case OPR:
-    for (int i = 0; i < indent; i++) { printf(" "); }
-    printf("%c(\n", node->opr.op);
-    print_node(node->opr.lhs, indent + 2);
-    print_node(node->opr.rhs, indent + 2);
-    for (int i = 0; i < indent; i++) { printf(" "); }
-    printf(")\n");    
+    printf("(");    	   
+    print_node(node->opr.lhs);	   
+    printf(" %c ", node->opr.op);
+    print_node(node->opr.rhs);
+    printf(")");    
     break;
   case APP:
-    for (int i = 0; i < indent; i++) { printf(" "); }
-    printf("APP(\n");
-    for (int i = 0; i < indent + 2; i++) { printf(" "); }
-    printf("FUN(\n");
-    print_node(node->app.fun, indent + 4);
-    for (int i = 0; i < indent + 2; i++) { printf(" "); }
-    printf(")\n");
-    for (int i = 0; i < indent + 2; i++) { printf(" "); }
-    printf("ARG(\n");
-    print_node(node->app.arg, indent + 4);
-    for (int i = 0; i < indent + 2; i++) { printf(" "); }
-    printf(")\n"); 
-    for (int i = 0; i < indent; i++) { printf(" "); }
-    printf(")\n"); 
+    printf("(");
+    print_node(node->app.fun);
+    printf(" ");
+    print_node(node->app.arg);
+    printf(")"); 
     break;
   default:
     printf("Not yet implemented\n");

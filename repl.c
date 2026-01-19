@@ -14,18 +14,24 @@ int main(void) {
     read(0, buff, BUFF_SIZE);
 
     AstNode* root = parse(buff);
-    print_node(root, 0);
-    printf("=====================\n");
+
     State* s = malloc(sizeof(State));
     s->c = make_closure(root, NULL);
     s->k = make_mt();
+    printf("=====================\n");        
+    print_state(s);
+    printf("\n");
+    printf("=====================\n");    
     State* s_next = step(s);
-    int i = 0; 
-    while (i < 10) {
-       print_node(s_next->c->x, 0);
-       printf("=====================\n");
-       s_next = step(s_next);
-       i++;
+    int is_stop = 0; 
+    while (!is_stop) {
+      s_next = step(s_next);
+      print_state(s_next);
+      printf("\n");
+      printf("Kont Type: %d\n", s_next->k->type);
+      printf("Is Value: %d\n", is_value(s_next->c->x));
+      printf("=====================\n");
+      is_stop = (s_next->k->type == MT) && is_value(s_next->c->x);
     }
   }
   return 0;

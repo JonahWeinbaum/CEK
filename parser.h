@@ -27,7 +27,8 @@ struct AstNode {
 AstNode* parse(char*);
 AstNode* parse_M(void);
 AstNode* parse_V(void);
-AstNode* make_num(int); 
-void print_node(AstNode*, int);
+AstNode* make_num(int);
+int is_value(AstNode*);
+void print_node(AstNode*);
 
 #endif

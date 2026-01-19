@@ -26,7 +26,7 @@ Sub* make_sub(AstNode* v, Closure* e) {
 
 struct Env {
   Sub* sub;
-  Env *next;
+  Env* next;
 };
 
 Env* add_sub(Env* env, Sub* sub) {
@@ -103,7 +103,7 @@ struct State {
 
 Closure* sub(AstNode* v, Env* e) {
   while(e != NULL) {
-    if (strcmp(e->sub->v->var.name, v->var.name)) {
+    if (!strcmp(e->sub->v->var.name, v->var.name)) {
       return e->sub->e;
     }
     
@@ -154,8 +154,8 @@ State* step(State* s) {
     
     // Empty lhs
     if (lhs == NULL) {
-      sp->c = rhs;            
-      sp->k = make_op(op, s->c, empty, k);
+      sp->c = rhs;
+      sp->k = make_op(op, s->c, empty, k->op.k);
     // Otherwise we may apply delta
     } else {
       sp->c = make_closure(make_num(lhs->x->num.value + s->c->x->num.value), e);
@@ -163,7 +163,6 @@ State* step(State* s) {
     }
     return sp;
   }
-  // ((\f.\x.(f x) \y.(+ y y)) (+ 1 20))
   
   if (k->type == AR) {
     sp->c = k->ar.c;
@@ -173,31 +172,92 @@ State* step(State* s) {
 
   if (k->type == FN) {
     Sub *sub = make_sub(k->fn.v->x->abs.param, s->c);
-    Env* ep = add_sub(e, sub);
+    Env* ep = add_sub(k->fn.v->e, sub);
     sp->c = make_closure(k->fn.v->x->abs.body, ep);
     sp->k = k->fn.k;
     return sp;
   }
 
   return s;
+}
 
-    /*    char op = x->opr.op; */
-    /*    Closure* empty = make_closure(NULL, e);        */
-    /*    Closure* lhs = make_closure(x->opr.lhs, e); */
-    /*    Closure* rhs = make_closure(x->opr.rhs, e); */
-    /*    Kont* kp = make_op(op, lhs, empty, k); */
-    /*    sp->c = rhs; */
-    /*    sp->k = kp; */
-    /*    return sp; */
-    /* } */
-    /* char op = x->opr.op; */
-    /* int v1 = x->opr.lhs->num.value; */
-    /* int v2 = x->opr.rhs->num.value; */
-    /* AstNode* deltav1v2 = make_num(v1+v2); */
-    /* Closure* res = make_closure(deltav1v2, NULL); */
-    /* sp->c = res; */
-    /* sp->k = k; */
-    /* return sp; */  
+void print_closure(Closure*);
+
+void print_sub(Sub* s) {
+  print_node(s->v);
+  printf(" = ");
+  print_closure(s->e);
+}
+
+void print_env(Env* e) {
+  if (e == NULL) {
+    printf("0");
+  } else {
+    printf("{");
+    while (true) {
+      print_sub(e->sub);
+      if (e->next != NULL) { 
+	printf(", ");
+      } else {
+	break;
+      }
+      e = e->next;
+    }
+    printf("}");
+  }
+}
+
+void print_closure(Closure* c) {
+  if (c == NULL) {
+    printf("<>");
+  } else {
+    printf("<");
+    print_node(c->x);
+    printf(", ");
+    print_env(c->e);
+    printf(">");
+  }
+}
+
+void print_kont(Kont* k) {
+  switch (k->type) {
+  case MT:
+    printf("mt");
+    break;
+  case AR:
+    printf("<ar, ");
+    print_closure(k->ar.c);
+    printf(", ");
+    print_kont(k->ar.k);
+    printf(">");
+    break;
+  case FN:
+    printf("<fn, ");
+    print_closure(k->fn.v);
+    printf(", ");
+    print_kont(k->fn.k);
+    printf(">");
+    break;
+  case OP:
+    printf("<%c, ", k->op.op);
+    print_closure(k->op.lhs);
+    printf(", ");
+    print_closure(k->op.rhs);
+    printf(", ");
+    print_kont(k->op.k);
+    printf(">");
+    break;
+  default:
+    printf("Not yet implemented\n");
+  }
+}
+
+void print_state(State* s) {
+  printf("<");
+  print_closure(s->c);
+  printf(",\n");
+  print_kont(s->k);
+  printf(">");
 }
 
 #endif
